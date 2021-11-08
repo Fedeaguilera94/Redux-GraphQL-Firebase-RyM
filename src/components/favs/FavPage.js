@@ -18,7 +18,7 @@ function FavPage({ characters = [0] }) {
 
 function mapStateToProps({ characters }) {
   return {
-    characters: characters.favorites.array,
+    characters: characters.favorites,
   };
 }
 

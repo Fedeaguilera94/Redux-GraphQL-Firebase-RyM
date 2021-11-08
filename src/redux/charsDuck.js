@@ -2,6 +2,7 @@ import axios from "axios";
 import { db, getFavs } from "../firebase";
 import { doc, setDoc } from "@firebase/firestore";
 import { saveStorage } from "./userDuck";
+import ApolloClient, { gql } from "apollo-boost";
 //constants
 const initialData = {
   fetching: false,
@@ -11,6 +12,10 @@ const initialData = {
 };
 
 const URL = "https://rickandmortyapi.com/api/character";
+
+let client = new ApolloClient({
+  uri: "https://rickandmortyapi.com/graphql",
+});
 
 const GET_CHARACTERS = "GET_CHARACTERS";
 const GET_CHARACTERS_SUCCES = "GET_CHARACTERS_SUCCES";
@@ -90,7 +95,6 @@ export let retrieveFav = () => (dispatch, getState) => {
   let { uid } = getState().user;
   return getFavs(uid)
     .then((array) => {
-      console.log("promise", array);
       dispatch({
         type: GET_FAVS_SUCCES,
         payload: array,
@@ -130,12 +134,38 @@ export let removeCharacterAction = () => (dispatch, getState) => {
   });
 };
 
-export let getCharactersAction = () => {
-  return (dispatch, getState) => {
-    dispatch({
-      type: GET_CHARACTERS,
+export let getCharactersAction = () => (dispatch, getState) => {
+  let query = gql`
+    {
+      characters {
+        results {
+          name
+          image
+        }
+      }
+    }
+  `;
+  dispatch({
+    type: GET_CHARACTERS,
+  });
+  return client
+    .query({
+      query,
+    })
+    .then(({ data, error }) => {
+      if (error) {
+        dispatch({
+          type: GET_CHARACTERS_ERROR,
+          payload: error,
+        });
+        return;
+      }
+      dispatch({
+        type: GET_CHARACTERS_SUCCES,
+        payload: data.characters.results,
+      });
     });
-    return axios
+  /*     return axios
       .get(URL)
       .then((res) => {
         dispatch({
@@ -150,13 +180,13 @@ export let getCharactersAction = () => {
           payload: err.response.message,
         });
       });
-  };
+  }; */
 };
 
 export let restoreFavs = () => (dispatch) => {
   let storage = localStorage.getItem("storage");
   storage = JSON.parse(storage);
-  if (storage && storage.characters.favorites.array) {
+  if (storage && storage.characters.favorites) {
     dispatch({
       type: GET_FAVS_SUCCES,
       payload: storage.characters.favorites,

@@ -26,7 +26,8 @@ export const getFavs = async (id) => {
   const docRef = doc(db, "favs", id);
   const docSnap = await getDoc(docRef);
   if (docSnap.exists()) {
-    return docSnap.data();
+    const data = docSnap.data();
+    return data.array.map((e) => e);
   } else {
     return console.log("not exist");
   }
