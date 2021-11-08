@@ -5,10 +5,12 @@ import {
   GoogleAuthProvider,
   signOut,
 } from "firebase/auth";
+import { getFirestore, getDoc, doc } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAuXq_jNSmMoUrwQP2jb0E8g_PmXUkZkq8",
   authDomain: "login-rym.firebaseapp.com",
+  databaseUrl: "https://login-rym.firebaseio.com",
   projectId: "login-rym",
   storageBucket: "login-rym.appspot.com",
   messagingSenderId: "172947871961",
@@ -18,6 +20,17 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+var db = getFirestore(app);
+
+export const getFavs = async (id) => {
+  const docRef = doc(db, "favs", id);
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    return docSnap.data();
+  } else {
+    return console.log("not exist");
+  }
+};
 
 export function signOutGoogle() {
   const auth = getAuth();
@@ -33,9 +46,6 @@ export function loginWithGoogle() {
     const credential = GoogleAuthProvider.credentialFromResult(result);
     return result.user;
   });
-  /*   let provider = new GoogleAuthProvider();
-  return firebase
-    .auth()
-    .signInWithPopup(provider)
-    .then((snap) => snap.user); */
 }
+
+export { db };
